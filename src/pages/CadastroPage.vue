@@ -37,6 +37,7 @@ const categorias = [
   { value: 'perifericos', label: 'Periféricos' },
   { value: 'cabos', label: 'Cabos e Acessórios' },
   { value: 'componentes', label: 'Componentes' },
+  { value: 'Automação', label: 'Automação' },
   { value: 'outros', label: 'Outros' },
 ];
 
