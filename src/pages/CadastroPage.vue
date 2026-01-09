@@ -33,7 +33,6 @@ const imagemPreview = ref<string | null>(null);
 
 const categorias = [
   { value: '', label: 'Selecione...' },
-  { value: 'notebooks', label: 'Notebooks' },
   { value: 'monitores', label: 'Monitores' },
   { value: 'perifericos', label: 'Periféricos' },
   { value: 'cabos', label: 'Cabos e Acessórios' },
