@@ -16,9 +16,11 @@ interface SelectProps {
   required?: boolean;
 }
 
+// AQUI ESTAVA O PROBLEMA: Adicionei options: () => [] para evitar o erro de undefined
 const props = withDefaults(defineProps<SelectProps>(), {
   disabled: false,
-  required: false
+  required: false,
+  options: () => [] 
 });
 
 const emit = defineEmits<{
@@ -42,7 +44,7 @@ const hasError = computed(() => !!props.error);
       class="w-full h-12 rounded-xl border transition-all duration-200 text-[15px] text-[#374151] bg-white shadow-[0_1px_2px_0_rgb(0_0_0_/_0.02)] px-4 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-opacity-20 focus:border-[#2563EB] disabled:bg-[#F8F9FA] disabled:text-[#9CA3AF] disabled:cursor-not-allowed"
       :class="hasError ? 'border-[#EF4444] focus:ring-[#EF4444] focus:ring-opacity-20 focus:border-[#EF4444]' : 'border-[#E5E7EB] hover:border-[#D1D5DB]'"
     >
-      <option v-for="option in options" :key="option.value" :value="option.value">
+      <option v-for="option in props.options" :key="option.value" :value="option.value">
         {{ option.label }}
       </option>
     </select>
