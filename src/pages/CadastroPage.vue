@@ -7,7 +7,9 @@ import {
   Wand2,
   Scan,
   X,
-  Lock
+  Lock,
+  CheckCircle, // Ícone novo
+  Plus
 } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import Card from '../components/Card.vue';
@@ -15,45 +17,16 @@ import Input from '../components/Input.vue';
 import Select from '../components/Select.vue';
 import Button from '../components/Button.vue';
 import { useMaterialStore } from '../stores/materialStore';
-import { useAuthStore } from '../stores/authStore'; // Importar AuthStore
+import { useAuthStore } from '../stores/authStore';
 
 const materialStore = useMaterialStore();
-const authStore = useAuthStore(); // Usar AuthStore
+const authStore = useAuthStore();
 
-// --- Lógica de Autenticação ---
+// --- Controles dos Modais ---
 const showAuthModal = ref(false);
+const showSuccessModal = ref(false); // Novo controle para o modal de sucesso
 const authInput = ref('');
 const authInputRef = ref<HTMLInputElement | null>(null);
-
-const abrirModalAuth = () => {
-  // Validação prévia do formulário antes de pedir crachá
-  if (!formData.value.nome || !formData.value.codigoPrincipal || !formData.value.categoria || !formData.value.quantidade) {
-    toast.error('Preencha os campos obrigatórios antes de salvar');
-    return;
-  }
-  
-  showAuthModal.value = true;
-  authInput.value = '';
-  // Foca no input automaticamente para o leitor de código de barras funcionar direto
-  nextTick(() => {
-    authInputRef.value?.focus();
-  });
-};
-
-const confirmarAuth = () => {
-  const usuario = authStore.validarCracha(authInput.value);
-  
-  if (usuario) {
-    toast.success(`Autorizado por: ${usuario.nome}`);
-    showAuthModal.value = false;
-    processarSalvamento(); // Chama a função real de salvar
-  } else {
-    toast.error('Crachá não autorizado ou desconhecido');
-    authInput.value = ''; // Limpa para tentar de novo
-    authInputRef.value?.focus();
-  }
-};
-// -----------------------------
 
 const formData = ref({
   nome: '',
@@ -66,6 +39,7 @@ const formData = ref({
   numeroSerie: ''
 });
 
+// ... (Manter listas de categorias e locais iguais) ...
 const categorias = [
   { value: 'hardware', label: 'Hardware (Monitores, PCs, Notebooks)' },
   { value: 'perifericos', label: 'Periféricos (Mouses, Teclados)' },
@@ -93,15 +67,37 @@ const permiteGerarCodigo = computed(() => {
 
 const gerarCodigoAutomatico = () => {
   if (!permiteGerarCodigo.value) return; 
-
   const random = Math.floor(100000 + Math.random() * 900000);
   const prefixo = formData.value.categoria === 'perifericos' ? 'PER' : 'GEN';
-  
   formData.value.codigoPrincipal = `${prefixo}-${random}`;
   toast.info('Código automático gerado!');
 };
 
-// Renomeei a função original para ser chamada apenas APÓS autenticação
+// --- Lógica de Fluxo ---
+const abrirModalAuth = () => {
+  if (!formData.value.nome || !formData.value.codigoPrincipal || !formData.value.categoria || !formData.value.quantidade) {
+    toast.error('Preencha os campos obrigatórios antes de salvar');
+    return;
+  }
+  showAuthModal.value = true;
+  authInput.value = '';
+  nextTick(() => authInputRef.value?.focus());
+};
+
+const confirmarAuth = () => {
+  const usuario = authStore.validarCracha(authInput.value);
+  
+  if (usuario) {
+    // Fecha modal de senha e processa
+    showAuthModal.value = false;
+    processarSalvamento(); 
+  } else {
+    toast.error('Crachá não autorizado');
+    authInput.value = '';
+    authInputRef.value?.focus();
+  }
+};
+
 const processarSalvamento = () => {
   try {
     const isPatrimonio = !formData.value.codigoPrincipal.includes('-');
@@ -117,8 +113,10 @@ const processarSalvamento = () => {
       valor: Number(formData.value.valor),
     });
 
-    toast.success('Material cadastrado com sucesso!');
+    // Em vez de toast, abre o modal de sucesso
+    showSuccessModal.value = true;
     
+    // Limpa o formulário em background
     formData.value = {
       nome: '',
       categoria: '',
@@ -134,13 +132,17 @@ const processarSalvamento = () => {
     toast.error(error.message || 'Erro ao salvar material');
   }
 };
+
+const fecharModalSucesso = () => {
+  showSuccessModal.value = false;
+};
 </script>
 
 <template>
   <div class="space-y-6 relative">
     
     <div v-if="showAuthModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all scale-100 border border-gray-100">
+      <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
             <Lock class="text-blue-600" />
@@ -150,15 +152,13 @@ const processarSalvamento = () => {
             <X :size="24" />
           </button>
         </div>
-
         <div class="flex flex-col items-center gap-4 py-4">
           <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center animate-pulse border-2 border-blue-200">
             <Scan :size="40" class="text-blue-600" />
           </div>
           <p class="text-center text-gray-600 font-medium">
-            Por favor, bipar seu crachá<br>para confirmar o cadastro.
+            Bipe seu crachá para confirmar.
           </p>
-          
           <input 
             ref="authInputRef"
             v-model="authInput"
@@ -168,8 +168,29 @@ const processarSalvamento = () => {
             placeholder="Aguardando leitura..."
             autocomplete="off"
           />
-          <p class="text-xs text-gray-400">Pressione Enter após digitar se não for automático</p>
         </div>
+      </div>
+    </div>
+
+    <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all scale-100 border border-green-100 text-center">
+        
+        <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+          <CheckCircle :size="48" class="text-green-600" />
+        </div>
+        
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Sucesso!</h2>
+        <p class="text-gray-600 mb-8">
+          O material foi cadastrado corretamente no sistema.
+        </p>
+
+        <button 
+          @click="fecharModalSucesso"
+          class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-lg shadow-green-200"
+        >
+          <Plus :size="20" />
+          Cadastrar Novo Item
+        </button>
       </div>
     </div>
 
@@ -181,7 +202,6 @@ const processarSalvamento = () => {
     </div>
 
     <form @submit.prevent="abrirModalAuth" class="space-y-8">
-      
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card class="md:col-span-2 border-l-4 border-l-blue-500">
           <div class="flex items-center gap-2 mb-6">
@@ -190,67 +210,23 @@ const processarSalvamento = () => {
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
             <div class="md:col-span-2">
-              <Input
-                v-model="formData.nome"
-                label="Nome do Material *"
-                placeholder="Ex: Mouse Logitech / Notebook Dell"
-                required
-              />
+              <Input v-model="formData.nome" label="Nome do Material *" placeholder="Ex: Mouse Logitech" required />
             </div>
-
-            <Select
-              v-model="formData.categoria"
-              label="Categoria *"
-              :options="categorias"
-              required
-            />
-
+            <Select v-model="formData.categoria" label="Categoria *" :options="categorias" required />
             <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700 mb-1">
-                Patrimônio ou Código Interno *
-              </label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Patrimônio ou Código Interno *</label>
               <div class="flex gap-2">
                 <div class="flex-1">
-                  <Input
-                    v-model="formData.codigoPrincipal"
-                    :placeholder="permiteGerarCodigo ? 'Gere um código ou digite...' : 'Digite o Nº da Etiqueta'"
-                    required
-                  />
+                  <Input v-model="formData.codigoPrincipal" :placeholder="permiteGerarCodigo ? 'Gere um código...' : 'Digite o Nº da Etiqueta'" required />
                 </div>
-                
-                <button 
-                  type="button"
-                  @click="gerarCodigoAutomatico"
-                  :disabled="!permiteGerarCodigo"
-                  :title="permiteGerarCodigo ? 'Gerar código automático' : 'Selecione Periféricos ou Outros para habilitar'"
-                  :class="[
-                    'px-3 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 border',
-                    permiteGerarCodigo 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600 shadow-md cursor-pointer' 
-                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-70'
-                  ]"
-                >
-                  <Wand2 :size="18" />
-                  <span class="text-xs font-medium">Gerar</span>
+                <button type="button" @click="gerarCodigoAutomatico" :disabled="!permiteGerarCodigo" :class="['px-3 py-2 rounded-lg flex items-center gap-2 border', permiteGerarCodigo ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400']">
+                  <Wand2 :size="18" /> <span class="text-xs">Gerar</span>
                 </button>
               </div>
-              
-              <p class="text-xs mt-1 transition-colors" :class="permiteGerarCodigo ? 'text-blue-600 font-medium' : 'text-gray-400'">
-                {{ permiteGerarCodigo 
-                   ? 'Dica: Para periféricos, você pode clicar em "Gerar" para criar um ID.' 
-                   : 'Para Hardware, digite obrigatoriamente o Nº do Patrimônio.' }}
-              </p>
             </div>
-
             <div class="space-y-1">
-               <Input
-                v-model="formData.numeroSerie"
-                label="Número de Série"
-                placeholder="Ex: SN123456789"
-              />
-              <p class="text-xs text-gray-400">Do fabricante (Opcional)</p>
+               <Input v-model="formData.numeroSerie" label="Número de Série" placeholder="Ex: SN123456" />
             </div>
           </div>
         </Card>
@@ -258,41 +234,13 @@ const processarSalvamento = () => {
         <Card class="md:col-span-2">
           <div class="flex items-center gap-2 mb-6">
             <Archive class="text-green-600" :size="20" />
-            <h3 class="font-semibold text-gray-800">Estoque e Localização</h3>
+            <h3 class="font-semibold text-gray-800">Estoque</h3>
           </div>
-
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Input
-              v-model="formData.quantidade"
-              label="Quantidade Inicial *"
-              type="number"
-              min="0"
-              required
-            />
-
-            <Input
-              v-model="formData.minimo"
-              label="Estoque Mínimo"
-              type="number"
-              min="1"
-              placeholder="Aviso"
-            />
-
-            <Select
-              v-model="formData.local"
-              label="Local de Armazenamento"
-              :options="locais"
-            />
-
-            <div class="md:col-span-1">
-               <Input
-                v-model="formData.valor"
-                label="Valor Unitário (R$)"
-                type="number"
-                step="0.01"
-                placeholder="0,00"
-              />
-            </div>
+            <Input v-model="formData.quantidade" label="Quantidade *" type="number" required />
+            <Input v-model="formData.minimo" label="Mínimo" type="number" />
+            <Select v-model="formData.local" label="Local" :options="locais" />
+            <Input v-model="formData.valor" label="Valor (R$)" type="number" step="0.01" />
           </div>
         </Card>
       </div>
