@@ -83,75 +83,78 @@ const getSlicePath = (index: number, data: any[]) => {
   const endAngle = startAngle + angle;
   
   const radius = 80;
+  const centerX = 100;
+  const centerY = 100;
+  
   const startRad = (startAngle - 90) * Math.PI / 180;
   const endRad = (endAngle - 90) * Math.PI / 180;
   
-  const x1 = radius * Math.cos(startRad);
-  const y1 = radius * Math.sin(startRad);
-  const x2 = radius * Math.cos(endRad);
-  const y2 = radius * Math.sin(endRad);
+  const x1 = centerX + radius * Math.cos(startRad);
+  const y1 = centerY + radius * Math.sin(startRad);
+  const x2 = centerX + radius * Math.cos(endRad);
+  const y2 = centerY + radius * Math.sin(endRad);
   
   const largeArc = angle > 180 ? 1 : 0;
   
-  return `M 0 0 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+  return `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
 };
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 animate-fade-in">
     <!-- Header Profissional -->
-    <div class="bg-gradient-to-r from-slate-800 to-slate-700 rounded-lg p-6 shadow-lg border-l-4 border-blue-500">
-      <h1 class="text-3xl font-bold text-white">Dashboard</h1>
-      <p class="text-slate-300 mt-1">Visão geral do estoque e movimentações</p>
+    <div class="bg-gradient-to-r from-slate-800 to-slate-700 rounded-lg p-6 shadow-lg border-l-4 border-blue-500 animate-slide-down hover:shadow-2xl transition-all duration-300">
+      <h1 class="text-3xl font-bold text-white animate-title">Dashboard</h1>
+      <p class="text-slate-300 mt-1 animate-subtitle">Visão geral do estoque e movimentações</p>
     </div>
 
     <!-- Cards de Métricas -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card class="bg-slate-800 border-slate-700 hover:shadow-xl transition-shadow duration-300">
+      <Card class="bg-slate-800 border-slate-700 hover:shadow-xl hover:-translate-y-2 transition-all duration-500 animate-card" style="animation-delay: 0.1s">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total de Materiais</p>
-            <h3 class="text-3xl font-bold text-white mt-2">{{ totalMateriais }}</h3>
+            <h3 class="text-3xl font-bold text-white mt-2 animate-number">{{ totalMateriais }}</h3>
           </div>
-          <div class="p-3 bg-blue-600 rounded-lg">
+          <div class="p-3 bg-blue-600 rounded-lg icon-float">
             <Package class="text-white" :size="28" />
           </div>
         </div>
       </Card>
 
-      <Card class="bg-slate-800 border-slate-700 hover:shadow-xl transition-shadow duration-300">
+      <Card class="bg-slate-800 border-slate-700 hover:shadow-xl hover:-translate-y-2 transition-all duration-500 animate-card" style="animation-delay: 0.2s">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Valor em Estoque</p>
-            <h3 class="text-2xl font-bold text-white mt-2">{{ formatarMoeda(valorTotalEstoque) }}</h3>
+            <h3 class="text-2xl font-bold text-white mt-2 animate-number">{{ formatarMoeda(valorTotalEstoque) }}</h3>
           </div>
-          <div class="p-3 bg-emerald-600 rounded-lg">
+          <div class="p-3 bg-emerald-600 rounded-lg icon-float">
             <TrendingUp class="text-white" :size="28" />
           </div>
         </div>
       </Card>
 
-      <Card class="bg-slate-800 border-slate-700 hover:shadow-xl transition-shadow duration-300">
+      <Card class="bg-slate-800 border-slate-700 hover:shadow-xl hover:-translate-y-2 transition-all duration-500 animate-card" style="animation-delay: 0.3s">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Estoque Crítico</p>
-            <h3 class="text-3xl font-bold text-orange-400 mt-2">{{ itensBaixoEstoque.length }}</h3>
+            <h3 class="text-3xl font-bold text-orange-400 mt-2 animate-number animate-pulse-slow">{{ itensBaixoEstoque.length }}</h3>
           </div>
-          <div class="p-3 bg-orange-600 rounded-lg">
+          <div class="p-3 bg-orange-600 rounded-lg icon-float">
             <AlertTriangle class="text-white" :size="28" />
           </div>
         </div>
       </Card>
 
-      <Card class="bg-slate-800 border-slate-700 hover:shadow-xl transition-shadow duration-300">
+      <Card class="bg-slate-800 border-slate-700 hover:shadow-xl hover:-translate-y-2 transition-all duration-500 animate-card" style="animation-delay: 0.4s">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Movimentações</p>
-            <h3 class="text-3xl font-bold text-white mt-2">
+            <h3 class="text-3xl font-bold text-white mt-2 animate-number">
               {{ (movimentacaoStore.movimentacoes || []).length }}
             </h3>
           </div>
-          <div class="p-3 bg-indigo-600 rounded-lg">
+          <div class="p-3 bg-indigo-600 rounded-lg icon-float">
             <ArrowRightLeft class="text-white" :size="28" />
           </div>
         </div>
@@ -161,9 +164,9 @@ const getSlicePath = (index: number, data: any[]) => {
     <!-- Gráficos e Analytics -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Gráfico de Pizza - Top 5 Materiais por Valor -->
-      <Card class="bg-slate-800 border-slate-700">
+      <Card class="bg-slate-800 border-slate-700 animate-slide-left hover:shadow-2xl transition-shadow duration-300">
         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <div class="w-1 h-6 bg-blue-500 rounded"></div>
+          <div class="w-1 h-6 bg-blue-500 rounded animate-pulse"></div>
           Top 5 Materiais por Valor
         </h3>
         <div class="relative" style="height: 300px;">
@@ -173,11 +176,13 @@ const getSlicePath = (index: number, data: any[]) => {
                 <path
                   :d="getSlicePath(index, dadosGraficoPizza)"
                   :fill="['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'][index]"
-                  class="transition-all duration-300 hover:opacity-80 cursor-pointer"
-                  :transform="`translate(100, 100)`"
+                  class="transition-all duration-500 hover:opacity-80 cursor-pointer pie-slice"
+                  :style="`animation-delay: ${index * 0.15}s; transform-origin: 100px 100px;`"
+                  @mouseenter="$event.target.style.transform = 'scale(1.05)'"
+                  @mouseleave="$event.target.style.transform = 'scale(1)'"
                 />
               </g>
-              <circle cx="100" cy="100" r="50" fill="#1e293b" />
+              <circle cx="100" cy="100" r="45" fill="#1e293b" class="animate-pulse-subtle" />
             </template>
             <text v-else x="100" y="100" text-anchor="middle" fill="#94a3b8" font-size="12">
               Sem dados
@@ -186,9 +191,10 @@ const getSlicePath = (index: number, data: any[]) => {
         </div>
         <div class="mt-4 space-y-2">
           <div v-for="(item, index) in dadosGraficoPizza" :key="index" 
-               class="flex items-center justify-between text-sm">
+               class="flex items-center justify-between text-sm animate-slide-right hover:bg-slate-700 p-2 rounded transition-all duration-200"
+               :style="`animation-delay: ${0.5 + index * 0.1}s`">
             <div class="flex items-center gap-2">
-              <div class="w-3 h-3 rounded-full" 
+              <div class="w-3 h-3 rounded-full animate-pulse-slow" 
                    :style="{backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'][index]}">
               </div>
               <span class="text-slate-300">{{ item.nome }}</span>
@@ -199,46 +205,46 @@ const getSlicePath = (index: number, data: any[]) => {
       </Card>
 
       <!-- Gráfico de Barras - Entrada vs Saída -->
-      <Card class="bg-slate-800 border-slate-700">
+      <Card class="bg-slate-800 border-slate-700 animate-slide-right hover:shadow-2xl transition-shadow duration-300">
         <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <div class="w-1 h-6 bg-emerald-500 rounded"></div>
+          <div class="w-1 h-6 bg-emerald-500 rounded animate-pulse"></div>
           Movimentações: Entrada vs Saída
         </h3>
         <div class="space-y-6 pt-4">
-          <div>
+          <div class="animate-slide-up" style="animation-delay: 0.2s">
             <div class="flex items-center justify-between mb-2">
               <span class="text-slate-300 font-medium">Entradas</span>
-              <span class="text-emerald-400 font-bold text-xl">{{ dadosMovimentacoes.entradas }}</span>
+              <span class="text-emerald-400 font-bold text-xl animate-number">{{ dadosMovimentacoes.entradas }}</span>
             </div>
             <div class="w-full bg-slate-700 rounded-full h-8 overflow-hidden">
               <div 
-                class="bg-gradient-to-r from-emerald-600 to-emerald-500 h-full rounded-full transition-all duration-1000 flex items-center justify-end pr-3"
+                class="bg-gradient-to-r from-emerald-600 to-emerald-500 h-full rounded-full transition-all duration-1000 flex items-center justify-end pr-3 bar-fill"
                 :style="{width: dadosMovimentacoes.entradas > 0 ? `${(dadosMovimentacoes.entradas / ((dadosMovimentacoes.entradas + dadosMovimentacoes.saidas) || 1)) * 100}%` : '0%'}"
               >
-                <TrendingUp :size="18" class="text-white" v-if="dadosMovimentacoes.entradas > 0" />
+                <TrendingUp :size="18" class="text-white animate-bounce-subtle" v-if="dadosMovimentacoes.entradas > 0" />
               </div>
             </div>
           </div>
 
-          <div>
+          <div class="animate-slide-up" style="animation-delay: 0.4s">
             <div class="flex items-center justify-between mb-2">
               <span class="text-slate-300 font-medium">Saídas</span>
-              <span class="text-orange-400 font-bold text-xl">{{ dadosMovimentacoes.saidas }}</span>
+              <span class="text-orange-400 font-bold text-xl animate-number">{{ dadosMovimentacoes.saidas }}</span>
             </div>
             <div class="w-full bg-slate-700 rounded-full h-8 overflow-hidden">
               <div 
-                class="bg-gradient-to-r from-orange-600 to-orange-500 h-full rounded-full transition-all duration-1000 flex items-center justify-end pr-3"
+                class="bg-gradient-to-r from-orange-600 to-orange-500 h-full rounded-full transition-all duration-1000 flex items-center justify-end pr-3 bar-fill"
                 :style="{width: dadosMovimentacoes.saidas > 0 ? `${(dadosMovimentacoes.saidas / ((dadosMovimentacoes.entradas + dadosMovimentacoes.saidas) || 1)) * 100}%` : '0%'}"
               >
-                <TrendingDown :size="18" class="text-white" v-if="dadosMovimentacoes.saidas > 0" />
+                <TrendingDown :size="18" class="text-white animate-bounce-subtle" v-if="dadosMovimentacoes.saidas > 0" />
               </div>
             </div>
           </div>
 
-          <div class="pt-4 border-t border-slate-700">
+          <div class="pt-4 border-t border-slate-700 animate-slide-up" style="animation-delay: 0.6s">
             <div class="flex items-center justify-between">
               <span class="text-slate-400">Total de Movimentações</span>
-              <span class="text-white font-bold text-2xl">
+              <span class="text-white font-bold text-2xl animate-number">
                 {{ dadosMovimentacoes.entradas + dadosMovimentacoes.saidas }}
               </span>
             </div>
@@ -250,26 +256,27 @@ const getSlicePath = (index: number, data: any[]) => {
     <!-- Alertas e Últimas Movimentações -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Alertas de Reposição -->
-      <Card class="bg-slate-800 border-slate-700">
+      <Card class="bg-slate-800 border-slate-700 animate-slide-left hover:shadow-2xl transition-shadow duration-300">
         <div class="flex items-center gap-2 mb-4">
-          <div class="p-2 bg-orange-600 rounded-lg">
+          <div class="p-2 bg-orange-600 rounded-lg icon-pulse">
             <AlertTriangle class="text-white" :size="20" />
           </div>
           <h3 class="font-bold text-white text-lg">Alertas de Reposição</h3>
         </div>
-        <div v-if="itensBaixoEstoque.length === 0" class="text-center py-12 text-slate-500">
+        <div v-if="itensBaixoEstoque.length === 0" class="text-center py-12 text-slate-500 animate-fade-in">
            <p class="font-medium">✓ Sistema operando normalmente</p>
            <p class="text-sm mt-1">Nenhum item crítico detectado</p>
         </div>
         <div v-else class="space-y-3 max-h-80 overflow-y-auto custom-scrollbar">
-          <div v-for="item in itensBaixoEstoque.slice(0, 5)" :key="item.codigo" 
-               class="flex items-center justify-between p-4 bg-slate-700 rounded-lg border-l-4 border-orange-500 hover:bg-slate-600 transition-colors">
+          <div v-for="(item, index) in itensBaixoEstoque.slice(0, 5)" :key="item.codigo" 
+               class="flex items-center justify-between p-4 bg-slate-700 rounded-lg border-l-4 border-orange-500 hover:bg-slate-600 hover:scale-[1.02] transition-all duration-200 animate-slide-right"
+               :style="`animation-delay: ${index * 0.1}s`">
             <div>
               <p class="font-semibold text-white">{{ item.nome }}</p>
               <p class="text-xs text-slate-400 mt-1">Código: {{ item.codigo }}</p>
             </div>
             <div class="text-right">
-              <p class="font-bold text-2xl text-orange-400">{{ item.quantidade }}</p>
+              <p class="font-bold text-2xl text-orange-400 animate-pulse-slow">{{ item.quantidade }}</p>
               <p class="text-xs text-slate-400">Mín: {{ item.minimo }}</p>
             </div>
           </div>
@@ -277,25 +284,26 @@ const getSlicePath = (index: number, data: any[]) => {
       </Card>
 
       <!-- Últimas Movimentações -->
-      <Card class="bg-slate-800 border-slate-700">
+      <Card class="bg-slate-800 border-slate-700 animate-slide-right hover:shadow-2xl transition-shadow duration-300">
         <div class="flex items-center gap-2 mb-4">
-          <div class="p-2 bg-indigo-600 rounded-lg">
+          <div class="p-2 bg-indigo-600 rounded-lg icon-pulse">
             <LayoutDashboard class="text-white" :size="20" />
           </div>
           <h3 class="font-bold text-white text-lg">Últimas Movimentações</h3>
         </div>
 
-        <div v-if="ultimasMovimentacoes.length === 0" class="text-center py-12 text-slate-500">
+        <div v-if="ultimasMovimentacoes.length === 0" class="text-center py-12 text-slate-500 animate-fade-in">
           <p class="font-medium">Nenhum registro encontrado</p>
         </div>
 
         <div v-else class="space-y-3">
-          <div v-for="mov in ultimasMovimentacoes" :key="mov.id" 
-               class="flex items-center justify-between p-3 bg-slate-700 rounded-lg hover:bg-slate-600 transition-colors border-l-2"
-               :class="mov.tipo === 'entrada' ? 'border-emerald-500' : 'border-orange-500'">
+          <div v-for="(mov, index) in ultimasMovimentacoes" :key="mov.id" 
+               class="flex items-center justify-between p-3 bg-slate-700 rounded-lg hover:bg-slate-600 hover:scale-[1.02] transition-all duration-200 border-l-2 animate-slide-left"
+               :class="mov.tipo === 'entrada' ? 'border-emerald-500' : 'border-orange-500'"
+               :style="`animation-delay: ${index * 0.1}s`">
             <div class="flex items-center gap-3">
               <div :class="mov.tipo === 'entrada' ? 'bg-emerald-600' : 'bg-orange-600'"
-                   class="p-2 rounded-lg">
+                   class="p-2 rounded-lg icon-bounce">
                 <component :is="mov.tipo === 'entrada' ? TrendingUp : TrendingDown" :size="18" class="text-white" />
               </div>
               <div>
@@ -304,7 +312,7 @@ const getSlicePath = (index: number, data: any[]) => {
               </div>
             </div>
             <span :class="mov.tipo === 'entrada' ? 'text-emerald-400 bg-emerald-900/30' : 'text-orange-400 bg-orange-900/30'" 
-                  class="font-bold text-lg px-3 py-1 rounded">
+                  class="font-bold text-lg px-3 py-1 rounded animate-fade-in">
               {{ mov.tipo === 'entrada' ? '+' : '-' }}{{ mov.quantidade }}
             </span>
           </div>
@@ -331,5 +339,220 @@ const getSlicePath = (index: number, data: any[]) => {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Animações de Entrada */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulseSubtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes numberCount {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes barFill {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+@keyframes pieSlice {
+  from {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Classes de Animação */
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.6s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+.animate-slide-left {
+  animation: slideLeft 0.6s ease-out;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+.animate-slide-right {
+  animation: slideRight 0.6s ease-out;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+.animate-card {
+  animation: cardAppear 0.8s ease-out;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+.animate-title {
+  animation: slideDown 0.8s ease-out;
+}
+
+.animate-subtitle {
+  animation: slideDown 1s ease-out;
+}
+
+.animate-number {
+  animation: numberCount 0.8s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2s ease-in-out infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.icon-float {
+  animation: float 2.5s ease-in-out infinite;
+}
+
+.icon-pulse {
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.icon-bounce {
+  animation: bounce 0.8s ease-in-out infinite;
+}
+
+.bar-fill {
+  animation: barFill 1.2s ease-out;
+}
+
+.pie-slice {
+  animation: pieSlice 1s ease-out;
+  opacity: 0;
+  animation-fill-mode: forwards;
 }
 </style>
