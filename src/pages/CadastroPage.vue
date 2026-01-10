@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import { 
-  Save, Archive, Barcode, Wand2, Scan, X, Lock, CheckCircle, Plus 
+  Save, Archive, Barcode, Wand2, Scan, X, Lock, CheckCircle, Plus,
+  Info, AlertCircle // Novos ícones para as instruções
 } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import Card from '../components/Card.vue';
@@ -14,12 +15,12 @@ import { useAuthStore } from '../stores/authStore';
 const materialStore = useMaterialStore();
 const authStore = useAuthStore();
 
-// Controles
+// --- Controles ---
 const showAuthModal = ref(false);
 const showSuccessModal = ref(false);
 const authInput = ref('');
 const authInputRef = ref<HTMLInputElement | null>(null);
-const usuarioLogado = ref<string>(''); // Armazena quem autorizou
+const usuarioLogado = ref<string>(''); 
 
 const formData = ref({
   nome: '',
@@ -33,11 +34,11 @@ const formData = ref({
 });
 
 const categorias = [
-  { value: 'hardware', label: 'Hardware' },
-  { value: 'perifericos', label: 'Periféricos' },
-  { value: 'cabos', label: 'Cabos' },
-  { value: 'rede', label: 'Rede' },
-  { value: 'consumiveis', label: 'Consumíveis' },
+  { value: 'hardware', label: 'Hardware (Notebooks, PCs)' },
+  { value: 'perifericos', label: 'Periféricos (Mouses, Teclados)' },
+  { value: 'cabos', label: 'Cabos e Adaptadores' },
+  { value: 'rede', label: 'Equipamentos de Rede' },
+  { value: 'consumiveis', label: 'Consumíveis (Tintas, Pilhas)' },
   { value: 'outros', label: 'Outros' },
 ];
 
@@ -61,11 +62,12 @@ const gerarCodigoAutomatico = () => {
   const random = Math.floor(100000 + Math.random() * 900000);
   const prefixo = formData.value.categoria === 'perifericos' ? 'PER' : 'GEN';
   formData.value.codigoPrincipal = `${prefixo}-${random}`;
+  toast.info('Código gerado com sucesso!');
 };
 
 const abrirModalAuth = () => {
   if (!formData.value.nome || !formData.value.codigoPrincipal || !formData.value.categoria || !formData.value.quantidade) {
-    toast.error('Preencha os campos obrigatórios');
+    toast.error('Preencha os campos obrigatórios (*)');
     return;
   }
   showAuthModal.value = true;
@@ -76,11 +78,11 @@ const abrirModalAuth = () => {
 const confirmarAuth = () => {
   const usuario = authStore.validarCracha(authInput.value);
   if (usuario) {
-    usuarioLogado.value = usuario.nome; // Salva o nome
+    usuarioLogado.value = usuario.nome;
     showAuthModal.value = false;
     processarSalvamento(); 
   } else {
-    toast.error('Crachá não autorizado');
+    toast.error('Crachá não autorizado ou desconhecido');
     authInput.value = '';
     authInputRef.value?.focus();
   }
@@ -100,7 +102,7 @@ const processarSalvamento = () => {
       minimo: Number(formData.value.minimo),
       valor: Number(formData.value.valor),
       local: formData.value.local,
-      criadoPor: usuarioLogado.value // Salva aqui
+      criadoPor: usuarioLogado.value 
     });
 
     showSuccessModal.value = true;
@@ -131,12 +133,12 @@ const processarSalvamento = () => {
           <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
             <Lock class="text-blue-600" /> Confirmar Cadastro
           </h2>
-          <button @click="showAuthModal = false"><X :size="24" class="text-gray-400" /></button>
+          <button @click="showAuthModal = false"><X :size="24" class="text-gray-400 hover:text-red-500" /></button>
         </div>
         <div class="flex flex-col items-center gap-4 py-4">
           <Scan :size="40" class="text-blue-600 animate-pulse" />
           <p class="text-center text-gray-600">Bipe seu crachá para assinar o cadastro.</p>
-          <input ref="authInputRef" v-model="authInput" @keyup.enter="confirmarAuth" type="password" class="w-full text-center border-2 border-gray-300 rounded-lg py-2 px-4 focus:border-blue-500 outline-none" placeholder="Aguardando..." />
+          <input ref="authInputRef" v-model="authInput" @keyup.enter="confirmarAuth" type="password" class="w-full text-center border-2 border-gray-300 rounded-lg py-2 px-4 focus:border-blue-500 outline-none" placeholder="Aguardando leitura..." />
         </div>
       </div>
     </div>
@@ -146,7 +148,7 @@ const processarSalvamento = () => {
         <CheckCircle :size="48" class="text-green-600 mx-auto mb-4" />
         <h2 class="text-2xl font-bold text-gray-800 mb-2">Sucesso!</h2>
         <p class="text-gray-600 mb-6">Material cadastrado por <strong>{{ usuarioLogado }}</strong>.</p>
-        <button @click="showSuccessModal = false" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2">
+        <button @click="showSuccessModal = false" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors">
           <Plus :size="20" /> Novo Cadastro
         </button>
       </div>
@@ -154,45 +156,97 @@ const processarSalvamento = () => {
 
     <div class="space-y-1">
       <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">Cadastrar Material</h1>
+      <p class="text-gray-500">Preencha os dados abaixo para registrar um novo item no sistema.</p>
     </div>
 
     <form @submit.prevent="abrirModalAuth" class="space-y-8">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card class="md:col-span-2 border-l-4 border-l-blue-500">
-          <div class="flex items-center gap-2 mb-6">
-            <Barcode class="text-blue-500" :size="20" />
-            <h3 class="font-semibold text-gray-800">Identificação</h3>
+        
+        <Card class="md:col-span-2 border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex items-center gap-2 mb-4">
+            <Barcode class="text-blue-600" :size="24" />
+            <h3 class="font-bold text-lg text-gray-800">Identificação do Item</h3>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="md:col-span-2"><Input v-model="formData.nome" label="Nome *" required /></div>
-            <Select v-model="formData.categoria" label="Categoria *" :options="categorias" required />
-            <div class="space-y-1">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Código/Patrimônio *</label>
-              <div class="flex gap-2">
-                <Input v-model="formData.codigoPrincipal" class="flex-1" required />
-                <button type="button" @click="gerarCodigoAutomatico" :disabled="!permiteGerarCodigo" class="px-3 border rounded-lg bg-gray-50 hover:bg-gray-100"><Wand2 :size="18" /></button>
-              </div>
+
+          <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 flex gap-3">
+            <Info class="text-blue-600 shrink-0 mt-0.5" :size="20" />
+            <div class="text-sm text-blue-800">
+              <p class="font-bold mb-1">Como preencher:</p>
+              <ul class="list-disc pl-4 space-y-1 opacity-90">
+                <li>Para <strong>Hardware</strong> (Notebooks, Monitores), use o número da etiqueta de <strong>Patrimônio</strong>.</li>
+                <li>Para <strong>Periféricos/Cabos</strong>, selecione a categoria correta e clique no botão <Wand2 :size="12" class="inline"/> <strong>Gerar</strong> para criar um código interno.</li>
+              </ul>
             </div>
-            <Input v-model="formData.numeroSerie" label="Nº Série" />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+              <Input v-model="formData.nome" label="Nome do Material *" placeholder="Ex: Mouse Dell Wireless" required />
+            </div>
+
+            <Select v-model="formData.categoria" label="Categoria *" :options="categorias" required />
+
+            <div class="space-y-1">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Código / Patrimônio *</label>
+              <div class="flex gap-2">
+                <Input v-model="formData.codigoPrincipal" class="flex-1" placeholder="Digite ou gere..." required />
+                
+                <button 
+                  type="button" 
+                  @click="gerarCodigoAutomatico" 
+                  :disabled="!permiteGerarCodigo" 
+                  :class="[
+                    'px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 border font-medium',
+                    permiteGerarCodigo 
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600 shadow-sm hover:shadow cursor-pointer' 
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                  ]"
+                  title="Habilitado apenas para Periféricos e Outros"
+                >
+                  <Wand2 :size="18" />
+                  <span class="hidden sm:inline">Gerar</span>
+                </button>
+              </div>
+              <p class="text-xs text-gray-400 mt-1" v-if="!permiteGerarCodigo">Selecione Periféricos ou Outros para gerar código.</p>
+            </div>
+
+            <Input v-model="formData.numeroSerie" label="Número de Série (S/N)" placeholder="Opcional" />
           </div>
         </Card>
 
-        <Card class="md:col-span-2">
-           <div class="flex items-center gap-2 mb-6">
-            <Archive class="text-green-600" :size="20" />
-            <h3 class="font-semibold text-gray-800">Estoque</h3>
+        <Card class="md:col-span-2 shadow-sm hover:shadow-md transition-shadow">
+           <div class="flex items-center gap-2 mb-4">
+            <Archive class="text-green-600" :size="24" />
+            <h3 class="font-bold text-lg text-gray-800">Controle de Estoque</h3>
           </div>
+
+          <div class="bg-orange-50 border border-orange-100 rounded-lg p-4 mb-6 flex gap-3">
+            <AlertCircle class="text-orange-600 shrink-0 mt-0.5" :size="20" />
+            <div class="text-sm text-orange-800">
+              <p class="font-bold mb-1">Dicas de Armazenamento:</p>
+              <ul class="list-disc pl-4 space-y-1 opacity-90">
+                <li>Defina um <strong>Estoque Mínimo</strong> para receber alertas quando o item estiver acabando.</li>
+                <li>Mantenha o <strong>Local</strong> atualizado para facilitar a auditoria.</li>
+              </ul>
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Input v-model="formData.quantidade" label="Qtd *" type="number" required />
-            <Input v-model="formData.minimo" label="Mínimo" type="number" />
-            <Select v-model="formData.local" label="Local" :options="locais" />
-            <Input v-model="formData.valor" label="Valor (R$)" type="number" step="0.01" />
+            <Input v-model="formData.quantidade" label="Quantidade Inicial *" type="number" min="0" required />
+            <Input v-model="formData.minimo" label="Estoque Mínimo (Alerta)" type="number" min="1" />
+            <Select v-model="formData.local" label="Local de Armazenamento" :options="locais" />
+            <div class="md:col-span-1">
+              <Input v-model="formData.valor" label="Valor Unitário (R$)" type="number" step="0.01" placeholder="0,00" />
+            </div>
           </div>
         </Card>
       </div>
 
       <div class="flex justify-end pt-4">
-        <Button type="submit" size="lg"><Save :size="18" class="mr-2" /> Salvar</Button>
+        <Button type="submit" size="lg" class="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200">
+          <Save :size="18" class="mr-2" /> 
+          Salvar Material
+        </Button>
       </div>
     </form>
   </div>
