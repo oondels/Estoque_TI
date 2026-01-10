@@ -11,6 +11,7 @@ import AlertasPage from './pages/AlertasPage.vue';
 import RelatoriosPage from './pages/RelatoriosPage.vue';
 import ConfiguracoesPage from './pages/ConfiguracoesPage.vue';
 import LoginPage from './pages/LoginPage.vue';
+import EdicaoPage from './pages/EdicaoPage.vue'; // <--- IMPORTAÇÃO NOVA OBRIGATÓRIA
 
 const isAuthenticated = ref(true);
 const currentPage = ref('dashboard');
@@ -67,6 +68,9 @@ const toggleSidebarCollapse = () => {
           <DashboardPage v-if="currentPage === 'dashboard'" @navigate="handleNavigate" />
           <CadastroPage v-else-if="currentPage === 'cadastro'" @navigate="handleNavigate" />
           <ListagemPage v-else-if="currentPage === 'listagem'" @navigate="handleNavigate" />
+          
+          <EdicaoPage v-else-if="currentPage === 'edicao'" @navigate="handleNavigate" />
+          
           <MovimentacaoPage v-else-if="currentPage === 'movimentacao'" @navigate="handleNavigate" />
           <AlertasPage v-else-if="currentPage === 'alertas'" @navigate="handleNavigate" />
           <RelatoriosPage v-else-if="currentPage === 'relatorios'" @navigate="handleNavigate" />
