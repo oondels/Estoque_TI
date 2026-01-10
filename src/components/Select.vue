@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { ChevronDown, AlertCircle } from 'lucide-vue-next';
 
 interface SelectOption {
   value: string;
@@ -14,13 +15,14 @@ interface SelectProps {
   options: SelectOption[];
   disabled?: boolean;
   required?: boolean;
+  placeholder?: string;
 }
 
-// AQUI ESTAVA O PROBLEMA: Adicionei options: () => [] para evitar o erro de undefined
 const props = withDefaults(defineProps<SelectProps>(), {
   disabled: false,
   required: false,
-  options: () => [] 
+  options: () => [],
+  placeholder: 'Selecione uma opção...'
 });
 
 const emit = defineEmits<{
@@ -31,27 +33,55 @@ const hasError = computed(() => !!props.error);
 </script>
 
 <template>
-  <div class="flex flex-col gap-2 w-full">
-    <label v-if="label" class="text-[15px] font-medium text-[#374151]">
+  <div class="flex flex-col gap-1.5 w-full">
+    <label v-if="label" class="text-sm font-semibold text-gray-700 ml-1 flex items-center gap-1">
       {{ label }}
+      <span v-if="required" class="text-red-500">*</span>
     </label>
     
-    <select
-      :value="modelValue"
-      @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
-      :disabled="disabled"
-      :required="required"
-      class="w-full h-12 rounded-xl border transition-all duration-200 text-[15px] text-[#374151] bg-white shadow-[0_1px_2px_0_rgb(0_0_0_/_0.02)] px-4 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-opacity-20 focus:border-[#2563EB] disabled:bg-[#F8F9FA] disabled:text-[#9CA3AF] disabled:cursor-not-allowed"
-      :class="hasError ? 'border-[#EF4444] focus:ring-[#EF4444] focus:ring-opacity-20 focus:border-[#EF4444]' : 'border-[#E5E7EB] hover:border-[#D1D5DB]'"
-    >
-      <option v-for="option in props.options" :key="option.value" :value="option.value">
-        {{ option.label }}
-      </option>
-    </select>
+    <div class="relative group">
+      <select
+        :value="modelValue"
+        @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
+        :disabled="disabled"
+        :required="required"
+        class="w-full h-[46px] rounded-xl border appearance-none transition-all duration-200 text-sm bg-white shadow-sm pl-4 pr-11 outline-none cursor-pointer
+               disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed disabled:border-gray-200"
+        :class="[
+          hasError 
+            ? 'border-red-300 text-red-900 focus:ring-4 focus:ring-red-100 focus:border-red-500' 
+            : 'border-gray-200 text-gray-700 hover:border-blue-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-50'
+        ]"
+      >
+        <option value="" disabled selected class="text-gray-400">
+          {{ placeholder }}
+        </option>
+        
+        <option 
+          v-for="option in props.options" 
+          :key="option.value" 
+          :value="option.value"
+          class="text-gray-900 py-2"
+        >
+          {{ option.label }}
+        </option>
+      </select>
+
+      <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none transition-transform duration-200 group-focus-within:rotate-180">
+        <ChevronDown 
+          :size="18" 
+          :class="hasError ? 'text-red-400' : 'text-gray-400 group-hover:text-blue-500'" 
+          stroke-width="2.5"
+        />
+      </div>
+    </div>
     
-    <div class="min-h-[24px]">
-      <span v-if="error" class="text-[13px] text-[#EF4444] font-medium">{{ error }}</span>
-      <span v-else-if="helper" class="text-[13px] text-[#6B7280]">{{ helper }}</span>
+    <div class="min-h-[20px] ml-1">
+      <div v-if="error" class="flex items-center gap-1.5 text-xs text-red-500 font-medium animate-in slide-in-from-top-1">
+        <AlertCircle :size="12" />
+        <span>{{ error }}</span>
+      </div>
+      <span v-else-if="helper" class="text-xs text-gray-500">{{ helper }}</span>
     </div>
   </div>
 </template>
