@@ -37,10 +37,14 @@ const categorias = [
 ];
 
 const locais = [
-  { value: 'ti_predio_a', label: 'TI - Prédio A' },
-  { value: 'ti_predio_b', label: 'TI - Prédio B' },
-  { value: 'almoxarifado', label: 'Almoxarifado Central' },
-  { value: 'armario_01', label: 'Armário 01 (Corredor)' },
+  { value: 'prateleira_nivel_01', label: 'Prateleira Nível 01' },
+  { value: 'prateleira_nivel_02', label: 'Prateleira Nível 02' },
+  { value: 'prateleira_nivel_03', label: 'Prateleira Nível 03' },
+  { value: 'gaveta_01', label: 'Gaveta 01' },
+  { value: 'gaveta_02', label: 'Gaveta 02' },
+  { value: 'gaveta_03', label: 'Gaveta 03' },
+  { value: 'organizador_01', label: 'Organizador 01' },
+  { value: 'organizador_02', label: 'Organizador 02' },
 ];
 
 // Lógica Inteligente: Só permite gerar código se for itens "menores"
