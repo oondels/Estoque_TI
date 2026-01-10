@@ -39,6 +39,8 @@ const categorias = [
   { value: 'cabos', label: 'Cabos e Adaptadores' },
   { value: 'rede', label: 'Equipamentos de Rede' },
   { value: 'consumiveis', label: 'Consumíveis (Tintas, Pilhas)' },
+  { value: 'monitor', label: 'Monitores' },
+  { value: 'automacao', label: 'Automação' },
   { value: 'outros', label: 'Outros' },
 ];
 
