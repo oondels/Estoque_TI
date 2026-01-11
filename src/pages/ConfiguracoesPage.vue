@@ -1,152 +1,240 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Save, User, Bell, Shield } from 'lucide-vue-next';
+import { ref, nextTick } from 'vue';
+import { 
+  Users, UserPlus, Trash2, Lock, ShieldCheck, LogOut, Scan, UserCog 
+} from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import Card from '../components/Card.vue';
 import Input from '../components/Input.vue';
+import Select from '../components/Select.vue';
 import Button from '../components/Button.vue';
+import Badge from '../components/Badge.vue';
+import { useAuthStore } from '../stores/authStore';
 
-const userData = ref({
-  nome: 'Administrador',
-  email: 'admin@estoque.com',
-  telefone: '(11) 99999-9999',
+const authStore = useAuthStore();
+
+// --- ESTADOS ---
+const isLocked = ref(true); // Começa bloqueado
+const adminAuthInput = ref('');
+const adminAuthRef = ref<HTMLInputElement | null>(null);
+
+const newUser = ref({
+  nome: '',
+  codigoCracha: '',
+  cargo: 'Operador'
 });
 
-const notificacoes = ref({
-  email: true,
-  estoqueMinimo: true,
-  movimentacoes: false,
-});
+const cargosOptions = [
+  { value: 'Admin', label: 'Administrador (Acesso Total)' },
+  { value: 'Técnico', label: 'Técnico TI (Cadastro/Movimentação)' },
+  { value: 'Operador', label: 'Operador (Apenas Movimentação)' }
+];
 
-const handleSave = () => {
-  toast.success('Configurações salvas com sucesso!');
+// --- AÇÕES ---
+
+const verificarAdmin = () => {
+  const usuario = authStore.validarCracha(adminAuthInput.value);
+  
+  if (usuario && usuario.cargo === 'Admin') {
+    isLocked.value = false;
+    toast.success(`Acesso liberado: ${usuario.nome}`);
+    adminAuthInput.value = '';
+  } else if (usuario) {
+    toast.error('Acesso Negado: Apenas Administradores podem acessar.');
+    adminAuthInput.value = '';
+  } else {
+    toast.error('Crachá desconhecido.');
+    adminAuthInput.value = '';
+    adminAuthRef.value?.focus();
+  }
 };
+
+const sairModoAdmin = () => {
+  isLocked.value = true;
+  toast.info('Sessão encerrada.');
+};
+
+const handleAddUser = () => {
+  if (!newUser.value.nome || !newUser.value.codigoCracha) {
+    toast.error('Preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  try {
+    authStore.adicionarUsuario({
+      nome: newUser.value.nome,
+      codigoCracha: newUser.value.codigoCracha,
+      cargo: newUser.value.cargo as any
+    });
+
+    toast.success('Usuário cadastrado com sucesso!');
+    newUser.value = { nome: '', codigoCracha: '', cargo: 'Operador' }; // Limpa form
+  } catch (e: any) {
+    toast.error(e.message);
+  }
+};
+
+const handleDeleteUser = (id: string, nome: string) => {
+  if (confirm(`Tem certeza que deseja remover "${nome}"?`)) {
+    try {
+      authStore.removerUsuario(id);
+      toast.success('Usuário removido.');
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+};
+
+// Foca no input ao carregar
+nextTick(() => {
+  if (isLocked.value) adminAuthRef.value?.focus();
+});
 </script>
 
 <template>
-  <div class="flex flex-col gap-10">
-    <div class="space-y-3">
-      <h1 class="bg-gradient-to-r from-[#1E40AF] to-[#2563EB] bg-clip-text text-transparent">
-        Configurações
-      </h1>
-      <p class="text-[#6B7280]">Gerencie suas preferências e informações do sistema</p>
+  <div class="relative min-h-[600px]">
+    
+    <div v-if="isLocked" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/80 backdrop-blur-sm rounded-3xl border-2 border-dashed border-gray-200">
+      <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md text-center border border-gray-100">
+        <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-blue-50">
+          <ShieldCheck :size="48" class="text-blue-600" />
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Configurações Protegidas</h2>
+        <p class="text-gray-500 mb-8 px-4">Esta área permite gerenciar usuários e acessos. Identifique-se como <strong class="text-blue-600">Admin</strong> para continuar.</p>
+        
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+            <Scan :size="20" class="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+          </div>
+          <input 
+            ref="adminAuthRef"
+            v-model="adminAuthInput"
+            @keyup.enter="verificarAdmin"
+            type="password"
+            class="w-full pl-11 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all text-center font-bold tracking-widest text-lg placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400"
+            placeholder="Bipe seu crachá de Admin..."
+            autocomplete="off"
+          />
+        </div>
+        <p class="text-xs text-gray-400 mt-4">Pressione Enter após a leitura se não for automático</p>
+      </div>
     </div>
 
-    <!-- Dados do Usuário -->
-    <Card>
-      <div class="flex items-center gap-3 mb-8">
-        <div class="w-12 h-12 bg-[#EFF6FF] rounded-xl flex items-center justify-center">
-          <User :size="24" class="text-[#2563EB]" />
-        </div>
-        <div>
-          <h3 class="font-semibold text-[#111827]">Dados do Usuário</h3>
-          <p class="text-sm text-[#6B7280]">Atualize suas informações pessoais</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
-          v-model="userData.nome"
-          label="Nome Completo"
-          placeholder="Seu nome"
-        />
-
-        <Input
-          v-model="userData.email"
-          label="E-mail"
-          type="email"
-          placeholder="seu@email.com"
-        />
-
-        <Input
-          v-model="userData.telefone"
-          label="Telefone"
-          placeholder="(00) 00000-0000"
-        />
-      </div>
-    </Card>
-
-    <!-- Notificações -->
-    <Card>
-      <div class="flex items-center gap-3 mb-8">
-        <div class="w-12 h-12 bg-[#ECFDF5] rounded-xl flex items-center justify-center">
-          <Bell :size="24" class="text-[#10B981]" />
-        </div>
-        <div>
-          <h3 class="font-semibold text-[#111827]">Notificações</h3>
-          <p class="text-sm text-[#6B7280]">Configure suas preferências de notificação</p>
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <div class="flex items-center justify-between p-4 bg-[#F8F9FA] rounded-xl">
-          <div>
-            <p class="font-medium text-[#111827]">Notificações por E-mail</p>
-            <p class="text-sm text-[#6B7280]">Receba alertas importantes por e-mail</p>
+    <div v-else class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex items-center gap-4">
+          <div class="p-3 bg-blue-100 text-blue-700 rounded-xl">
+            <UserCog :size="28" />
           </div>
-          <input
-            v-model="notificacoes.email"
-            type="checkbox"
-            class="w-5 h-5 text-[#2563EB] rounded"
-          />
-        </div>
-
-        <div class="flex items-center justify-between p-4 bg-[#F8F9FA] rounded-xl">
           <div>
-            <p class="font-medium text-[#111827]">Alertas de Estoque Mínimo</p>
-            <p class="text-sm text-[#6B7280]">Avise quando itens atingirem o estoque mínimo</p>
+            <h1 class="text-xl font-bold text-gray-900">Gestão de Acessos</h1>
+            <p class="text-sm text-gray-500">Adicione ou remova permissões de uso do sistema.</p>
           </div>
-          <input
-            v-model="notificacoes.estoqueMinimo"
-            type="checkbox"
-            class="w-5 h-5 text-[#2563EB] rounded"
-          />
         </div>
-
-        <div class="flex items-center justify-between p-4 bg-[#F8F9FA] rounded-xl">
-          <div>
-            <p class="font-medium text-[#111827]">Relatório de Movimentações</p>
-            <p class="text-sm text-[#6B7280]">Receba resumo semanal de movimentações</p>
-          </div>
-          <input
-            v-model="notificacoes.movimentacoes"
-            type="checkbox"
-            class="w-5 h-5 text-[#2563EB] rounded"
-          />
-        </div>
-      </div>
-    </Card>
-
-    <!-- Segurança -->
-    <Card>
-      <div class="flex items-center gap-3 mb-8">
-        <div class="w-12 h-12 bg-[#FEF2F2] rounded-xl flex items-center justify-center">
-          <Shield :size="24" class="text-[#EF4444]" />
-        </div>
-        <div>
-          <h3 class="font-semibold text-[#111827]">Segurança</h3>
-          <p class="text-sm text-[#6B7280]">Proteja sua conta</p>
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <Button variant="secondary" full-width>
-          Alterar Senha
-        </Button>
-        <Button variant="secondary" full-width>
-          Autenticação em Dois Fatores
+        <Button variant="secondary" @click="sairModoAdmin" class="shrink-0">
+          <LogOut :size="18" class="mr-2" /> 
+          Sair do Modo Admin
         </Button>
       </div>
-    </Card>
 
-    <!-- Salvar -->
-    <Card class="bg-gradient-to-r from-[#F9FAFB] to-[#F3F4F6] border-2 border-dashed border-[#E5E7EB]">
-      <div class="flex justify-end">
-        <Button @click="handleSave">
-          <Save :size="16" />
-          Salvar Configurações
-        </Button>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <div class="lg:col-span-4 space-y-6">
+          <Card class="border-t-4 border-t-blue-500 h-full">
+            <div class="flex items-center gap-2 mb-6">
+              <UserPlus :size="22" class="text-blue-600" />
+              <h3 class="font-bold text-gray-800 text-lg">Adicionar Usuário</h3>
+            </div>
+            
+            <div class="space-y-5">
+              <Input 
+                v-model="newUser.nome" 
+                label="Nome Completo *" 
+                placeholder="Ex: Maria Oliveira" 
+              />
+              
+              <Input 
+                v-model="newUser.codigoCracha" 
+                label="Código do Crachá *" 
+                placeholder="Bipe o novo crachá..." 
+              />
+              
+              <Select 
+                v-model="newUser.cargo" 
+                label="Nível de Permissão *" 
+                :options="cargosOptions" 
+              />
+
+              <div class="pt-2">
+                <Button full-width size="lg" @click="handleAddUser" class="shadow-lg shadow-blue-100">
+                  <UserPlus :size="18" class="mr-2" />
+                  Cadastrar
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <div class="lg:col-span-8">
+          <Card class="h-full">
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-2">
+                <Users :size="22" class="text-gray-600" />
+                <h3 class="font-bold text-gray-800 text-lg">Usuários Cadastrados</h3>
+              </div>
+              <Badge variant="default">{{ authStore.usuarios.length }} ativos</Badge>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-gray-200">
+              <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuário</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Crachá</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Permissão</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Ações</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                  <tr v-for="user in authStore.usuarios" :key="user.id" class="hover:bg-blue-50/50 transition-colors group">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 border border-gray-200">
+                          {{ user.nome.charAt(0).toUpperCase() }}
+                        </div>
+                        <span class="font-medium text-gray-900">{{ user.nome }}</span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <code class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-mono border border-gray-200">{{ user.codigoCracha }}</code>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <Badge v-if="user.cargo === 'Admin'" variant="warning" class="shadow-sm">ADMIN</Badge>
+                      <Badge v-else-if="user.cargo === 'Técnico'" variant="success" class="shadow-sm">TÉCNICO</Badge>
+                      <Badge v-else variant="default">OPERADOR</Badge>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                      <button 
+                        @click="handleDeleteUser(user.id, user.nome)"
+                        class="text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                        title="Remover usuário"
+                      >
+                        <Trash2 :size="18" />
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <p class="text-xs text-gray-400 mt-4 text-center">
+              * Administradores têm acesso total. Técnicos podem cadastrar itens. Operadores apenas registram movimentações.
+            </p>
+          </Card>
+        </div>
+
       </div>
-    </Card>
+    </div>
   </div>
 </template>
