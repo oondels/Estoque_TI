@@ -66,7 +66,7 @@ const toggleProfile = () => {
           <div class="leading-none hidden sm:block">
             <span class="block text-[11px] font-bold text-blue-600 tracking-widest uppercase">Controle de</span>
             <h1 class="text-xl font-extrabold bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent tracking-tight">
-              ESTOQUE <span class="text-blue-800">TI</span>
+              ESTOQUE <span class="text-blue-800">TI · AUTOMAÇÃO</span>
             </h1>
           </div>
         </div>
