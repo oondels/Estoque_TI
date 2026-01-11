@@ -28,8 +28,8 @@ const sizeStyles = {
 
 <template>
   <div 
-    class="bg-white rounded-2xl border transition-all duration-300"
-    :class="[variantStyles[variant], sizeStyles[size]]"
+    class="rounded-2xl border transition-all duration-300"
+    :class="[variantStyles[variant], sizeStyles[size], $attrs.class || 'bg-white']"
   >
     <slot />
   </div>
