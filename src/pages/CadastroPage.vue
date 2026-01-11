@@ -51,6 +51,7 @@ const locais = [
   { value: 'gaveta_01', label: 'Gaveta 01' },
   { value: 'gaveta_02', label: 'Gaveta 02' },
   { value: 'gaveta_03', label: 'Gaveta 03' },
+  { value: 'gaveta_04', label: 'Gaveta 04' },
   { value: 'organizador_01', label: 'Organizador 01' },
   { value: 'organizador_02', label: 'Organizador 02' },
 ];
